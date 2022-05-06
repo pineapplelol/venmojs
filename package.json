@@ -1,6 +1,6 @@
 {
   "name": "venmojs",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Venmo API wrapper for NodeJS",
   "type": "module",
   "main": "index.js",

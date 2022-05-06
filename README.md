@@ -24,11 +24,11 @@ Example:
 
 ```json
 {
-  id: "0123456789",
-  username: "pineapplelol",
-  name: "Pineapple Lol",
-  dateJoined: "2016",
-  profilePictureURL: "https://pineapple.lol/asset/fronz.png"
+  "id": "0123456789",
+  "username": "pineapplelol",
+  "name": "Pineapple Lol",
+  "dateJoined": "2016",
+  "profilePictureURL": "https://pineapple.lol/asset/fronz.png"
 }
 ```
 
@@ -48,17 +48,17 @@ Call `Venmo.getTransactions` with a userID to retrieve a list of transactions in
 
 ```json
 {
-  date: "2018-04-29 4:23PM",
-  note: "Here are your fruit",
-  action: "pay",
-  actor: {
-    name: "Pineapple Lol",
-    username: "pineapplelol"
+  "date": "2018-04-29 4:23PM",
+  "note": "Here are your fruit",
+  "action": "pay",
+  "actor": {
+    "name": "Pineapple Lol",
+    "username": "pineapplelol"
   },
-  target: {
-    name: "Apple Lol",
-    username: "applelol"
-  },
+  "target": {
+    "name": "Apple Lol",
+    "username": "applelol"
+  }
 }
 ```
 
