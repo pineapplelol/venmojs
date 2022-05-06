@@ -14,13 +14,21 @@ Call `Venmo.getUserIDfromUsername` to get the userID given a username. This user
 
 Call `Venmo.getUserInformation` to get information about a user given a username. This information includes
 
+- id: The unique Venmo userID.
+- username: The username of the user.
+- name: The display name of the user.
+- dateJoined: The date the user joined Venmo.
+- profilePictureURL: The URL of the user's profile image.
+
+Example:
+
 ```json
 {
-  id: The unique Venmo userID.
-  username: The username of the user.
-  name: The display name of the user.
-  dateJoined: The date the user joined Venmo.
-  profilePictureURL: The URL of the user's profile image.
+  id: "0123456789",
+  username: "pineapplelol",
+  name: "Pineapple Lol",
+  dateJoined: "2016",
+  profilePictureURL: "https://pineapple.lol/asset/fronz.png"
 }
 ```
 
@@ -28,19 +36,29 @@ Call `Venmo.getUserInformation` to get information about a user given a username
 
 Call `Venmo.getTransactions` with a userID to retrieve a list of transactions in the following format:
 
+- date: The date of the transaction.
+- note: The message of the transaction.
+- action: Typically `charge` or `pay`, for which the actor initiated to the target.
+- actor: The actor user (the one who charged or paid) with the following properties:
+  - name: The name of the actor user.
+  - username: The username of the actor user.
+- target: The target user (the one who was charged or paid) with the following properties:
+  - name: The name of the target user.
+  - username: The username of the target user.
+
 ```json
 {
-  date: The date of the transaction.
-  note: The message of the transaction.
-  action: Typically `charge` or `pay`, for which the actor initiated to the target.
-  actor: The actor user (the one who charged or paid) with the following properties: {
-    name: The name of the actor user.
-    username: The username of the actor user.
-  }
-  target: The target user (the one who was charged or paid) with the following properties: {
-    name: The name of the target user.
-    username: The username of the target user.
-  }
+  date: "2018-04-29 4:23PM",
+  note: "Here are your fruit",
+  action: "pay",
+  actor: {
+    name: "Pineapple Lol",
+    username: "pineapplelol"
+  },
+  target: {
+    name: "Apple Lol",
+    username: "applelol"
+  },
 }
 ```
 
