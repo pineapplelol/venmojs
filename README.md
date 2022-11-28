@@ -4,9 +4,9 @@ A NodeJS wrapper for the Venmo API.
 
 ## Usage
 
-### Login
+### Login / Logout
 
-Call `Venmo.login(username, password)` with username and password to sign in, generate an access key, and automatically set it.
+Call `Venmo.login(username, password)` with username and password to sign in, generate an access key, and automatically set it. May require a 2FA code to be input. It will also return the personal access token. To logout, call `Venmo.logout()`. Optionally provide the access token to logout of a specific account with `Venmo.logout(accessToken)`.
 
 ### User Information
 
@@ -64,7 +64,7 @@ Call `Venmo.getTransactions` with a userID to retrieve a list of transactions in
 
 ### Errors
 
-Errors will be thrown if there are invalid credentials (or not passed), or if you hit Venmo's rate limit.
+Errors will be thrown if there are invalid credentials (or not passed), or if you hit Venmo's rate limit (quite low).
 
 ### Example
 
@@ -84,3 +84,7 @@ Venmo.getUserIDfromUsername("username")
     Venmo.logout();
   });
 ```
+
+### Practically
+
+You can build a easy server with this package to serve a frontend such as [venmo.lol](https://github.com/pineapplelol/venmo.lol). Note that Venmo's rate limit is quite low, so you should aim to cache results of API calls to prevent duplicate calls.
