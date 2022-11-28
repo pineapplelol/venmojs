@@ -1,6 +1,22 @@
 import fetch from "node-fetch";
+import readline from "readline";
 
 const baseUrl = "https://api.venmo.com/v1";
+
+// Generates a random device ID
+const deviceId = "88884260-05O3-8U81-58I1-2WA76F357GR9"
+  .replace(/[a-z]/gi, function (letter) {
+    return String.fromCharCode(Math.floor(Math.random() * 26) + 65);
+  })
+  .replace(/[0-9]/gi, function (number) {
+    return Math.floor(Math.random() * 10);
+  });
+
+// Headers that are sent with every request
+const persistentHeaders = {
+  "device-id": deviceId,
+  "Content-Type": "application/json",
+};
 
 const Venmo = {
   /**
@@ -20,38 +36,97 @@ const Venmo = {
   },
 
   /**
-   * Logins given a username and password. Currently does not support
-   * 2FA (coming soon). This function will automatically set the access token
-   * for the user.
+   * Performs a login attempt given a username, password, and optionally 2FA authentication
+   * credentials. This function does not set the access token for the Venmo object. It can return
+   * two kinds of values:
+   * 1. If 2FA is required, it will return {type: '2fa', value: otp_secret}.
+   * 2. If login is successful, it will return {type: 'accessToken', value: accessToken}.
+   *
    * @param {string} username The username for the Venmo account.
    * @param {string} password The password for the Venmo account.
-   * @returns {Promise} A promise that resolves to the user accessToken.
-   * @example
-   *   await Venmo.login("pineapplelol", "pineapplesaregreat")
+   * @returns {Promise} A promise that resolves to a dictionary containing the value type and
+   *   the value (either the 2FA secret or the access token).
    **/
-  login: function (username, password) {
-    const deviceId = "88884260-05O3-8U81-58I1-2WA76F357GR9"
-      .replace(/[a-z]/gi, function (letter) {
-        return String.fromCharCode(Math.floor(Math.random() * 26) + 65);
-      })
-      .replace(/[0-9]/gi, function (number) {
-        return Math.floor(Math.random() * 10);
-      });
-
+  initLogin: async function (username, password, twofaHeaders = {}) {
     const resourcePath = baseUrl + "/oauth/access_token";
     const header_params = {
-      "device-id": deviceId,
-      "Content-Type": "application/json",
       Host: "api.venmo.com",
+      ...persistentHeaders,
+      ...twofaHeaders,
     };
     const body = { phone_email_or_username: username, client_id: "1", password: password };
 
+    let type = "",
+      value = "";
     return fetch(resourcePath, { method: "POST", headers: header_params, body: JSON.stringify(body) })
-      .then((res) => res.json())
-      .then((json) => {
-        this.setAccessToken(json.access_token);
-        return json.access_token;
+      .then((res) => {
+        if (res.status == 401) {
+          console.log("2fa required in initLogin");
+          type = "2fa";
+          value = res.headers.get("venmo-otp-secret");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        if (type !== "2fa") {
+          console.log(data);
+          type = "accessToken";
+          value = data.access_token;
+        }
+      })
+      .then(() => {
+        return { type, value };
       });
+  },
+
+  /**
+   * Will send a request to the Venmo API to complete the login process with 2FA.
+   * @param {string} otpSecret The otp secret returned in the header of the initLogin request.
+   */
+  sendTwoFactor: function (otpSecret) {
+    const resourcePath = baseUrl + "/account/two-factor/token";
+    const header_params = {
+      "venmo-otp-secret": otpSecret,
+      ...persistentHeaders,
+    };
+    const body = { via: "sms" };
+    return fetch(resourcePath, { method: "POST", headers: header_params, body: JSON.stringify(body) }).then(
+      (res) => {}
+    );
+  },
+
+  /**
+   * Will complete an end-to-end login for a user given their username and password. If 2FA is required, it will
+   * prompt the user for the 2FA code and then complete the login. It will automatically set the access token for
+   * the Venmo object.
+   * @param {string} username The username for the Venmo account.
+   * @param {string} password The password for the Venmo account.
+   * @returns The personal access token for the user.
+   */
+  login: async function (username, password) {
+    const loginRes = await this.initLogin(username, password);
+    let { type, value } = loginRes;
+
+    if (type === "2fa") {
+      console.log("2FA required. Please enter the code sent to your phone.");
+      this.sendTwoFactor(value);
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+      });
+      const code = await new Promise((res) => {
+        rl.question("Enter OTP code:", (answer) => res(answer));
+      });
+      const loginRes = await this.initLogin(username, password, {
+        "venmo-otp-secret": value,
+        "venmo-otp": code,
+      });
+      value = loginRes.value;
+    }
+
+    this.setAccessToken(value);
+    console.log("Logged in successfully! Your access token is: " + value);
+    return value;
   },
 
   /**
